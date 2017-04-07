@@ -1,0 +1,16 @@
+#!/bin/sh /etc/rc.common
+# Copyright 2016 InvizBox Ltd
+# https://www.invizbox.com/lic/license.txt
+
+START=94
+APP=wifiwatch.lua
+USE_PROCD=1
+
+start_service() {
+	procd_open_instance
+	procd_set_param command /usr/lib/lua/${APP}
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_set_param respawn
+	procd_close_instance
+}

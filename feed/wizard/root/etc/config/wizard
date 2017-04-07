@@ -1,0 +1,2 @@
+config wizard main
+	option complete 'false'

@@ -1,0 +1,5 @@
+config invizbox 'current'
+	option ap 'Up'
+	option wan 'Down'
+	option vpn 'Down'
+	option status 'Default State'

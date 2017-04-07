@@ -1,0 +1,55 @@
+<%# Copyright 2016 InvizBox Ltd
+	https://www.invizbox.com/lic/license.txt
+-%>
+<!-- apache -->
+<div class="form-group cbi-value<% if self.error and self.error[section] then %> cbi-value-error<% end %><% if self.last_child then %> cbi-value-last<% end %>" id="cbi-<%=self.config.."-"..section.."-"..self.option%>" data-index="<%=self.index%>" data-depends="<%=pcdata(self:deplist2json(section))%>">
+	<%- if self.title and #self.title > 0 then -%>
+	<label <%= attr("for", cbid) %>>
+	<%- if self.titleref then -%><a title="<%=self.titledesc or translate('Go to relevant configuration page')%>" class="cbi-title-ref" href="<%=self.titleref%>"><%- end -%>
+		<%-=self.title-%>
+	<%- if self.titleref then -%></a><%- end -%>
+	</label>
+<!--		<div class="cbi-value-field"> -->
+	<%- end -%>
+
+	<input data-update="change"
+		<%=
+		attr("id", self.id or cbid) ..
+		attr("name", cbid) ..
+		attr("type", self.password and "password" or "text") ..
+		attr("class", self.password and "form-control cbi-input-password" or "form-control") ..
+		attr("value", self:cfgvalue(section) or self.default) ..
+		ifattr(self.validator_pattern, "pattern", self.validator_pattern) ..
+		ifattr(self.maxlength, "maxlength", self.maxlength) ..
+		ifattr(self.validator_minlength, "data-minlength", self.validator_minlength) ..
+		ifattr(self.size, "size") ..
+		ifattr(self.placeholder, "placeholder") ..
+		ifattr(self.readonly, "readonly") ..
+		ifattr(self.maxlength, "maxlength") ..
+		ifattr(self.datatype, "data-type", self.datatype) ..
+		ifattr(self.datatype, "data-optional", self.optional or self.rmempty) ..
+		ifattr(self.combobox_manual, "data-manual", self.combobox_manual) ..
+		ifattr(#self.keylist > 0, "data-choices", { self.keylist, self.vallist })
+
+	%> <% if self.required then
+                        print(" required")
+                end %> />
+		<% if self.password then %><i id="revealpass" class="fa fa-eye fa-lg" aria-hidden="true" style="vertical-align:middle;cursor:pointer" title="Reveal/hide password" onclick="var e = document.getElementById('<%=self.id%>'); e.type = (e.type=='password') ? 'text' : 'password';" ></i><% end %>
+		<% if self.validator_minlength then %>
+			<div class="help-block">Minimum of <%=self.validator_minlength%> characters</div>
+		<% end %>
+
+                <% if self.validator_help  then %>
+                        <div class="help-block"><%=self.validator_help%></div>
+                <% end %>
+
+		<% if self.description and #self.description > 0 then -%>
+			<div class="cbi-value-description">
+				<img src="<%=resource%>/cbi/help.gif" alt="<%:help%>" />
+				<%=self.description%>
+			</div>
+		<%- end %>
+	<%- if self.title and #self.title > 0 then -%>
+<!--	</div>-->
+	<%- end -%>
+</div>

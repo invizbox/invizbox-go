@@ -1,0 +1,11 @@
+<%# Copyright 2016 InvizBox Ltd
+	https://www.invizbox.com/lic/license.txt
+-%>
+<!-- apache -->
+
+	<input type="hidden" data-update="change"<%=
+		attr("id", cbid) ..
+		attr("name", cbid) ..
+		attr("value", self:cfgvalue(section) or self.default) ..
+		attr("class", "form-control")
+	%> />
