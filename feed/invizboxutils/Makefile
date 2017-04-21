@@ -3,8 +3,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=invizboxutils
-PKG_VERSION:=1.2
-PKG_RELEASE:=1
+PKG_VERSION:=2.0
+PKG_RELEASE:=3
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/invizboxutils
 
@@ -13,7 +13,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/invizboxutils
 	SECTION:=invizbox
 	CATEGORY:=Invizbox
-	DEPENDS:=+luasocket
+	DEPENDS:=+luasocket +luasec
 	TITLE:=Utils needed for other packages
 endef
 

@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=netwatch
 PKG_VERSION:=0.2
-PKG_RELEASE:=0
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/netwatch
 
@@ -13,7 +13,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/netwatch
 	SECTION:=invizbox
 	CATEGORY:=Invizbox
-	DEPENDS:=+invizboxutils +ledcontrol +wifiwatch
+	DEPENDS:=+invizboxutils +ledcontrol +wifiwatch +dnsmasq
 	TITLE:=Network Watcher
 endef
 
@@ -22,8 +22,10 @@ define Package/netwatch/description
 endef
 
 define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)/bin
 	mkdir -p $(PKG_BUILD_DIR)/src
 	mkdir -p $(PKG_BUILD_DIR)/root
+	$(CP) ./bin/* $(PKG_BUILD_DIR)/bin/
 	$(CP) ./src/* $(PKG_BUILD_DIR)/src/
 	$(CP) ./root/* $(PKG_BUILD_DIR)/root/
 endef
@@ -31,9 +33,15 @@ endef
 define Build/Compile
 endef
 
+define Package/netwatch/conffiles
+	/etc/config/status
+endef
+
 define Package/netwatch/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/*  $(1)/usr/lib/lua/
+	$(INSTALL_DIR) $(1)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/* $(1)/bin/
 	$(INSTALL_DIR) $(1)/
 	$(CP) $(PKG_BUILD_DIR)/root/* $(1)/
 	$(RM) $(1)/etc/dnsmasq.conf

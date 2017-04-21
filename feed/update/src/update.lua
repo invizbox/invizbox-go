@@ -153,7 +153,7 @@ function update.update_opkg()
         return 0
     else
         utils.log("Updating opkg via clearnet.")
-        os.execute("opkg -f /bin/opkg_update.ash /etc/opkg_clearnet.conf update > /var/log/opkg_update.log  2>&1")
+        os.execute("opkg -f /etc/opkg_clearnet.conf update > /var/log/opkg_update.log  2>&1")
         utils.log(utils.run_and_log("cat /var/log/opkg_update.log"))
         os.execute("eval $(opkg list_installed | sed 's/ - .*/;/' | sed 's/^/opkg upgrade /') > /var/log/opkg_upgrade.log 2>&1")
         utils.log(utils.run_and_log("cat /var/log/opkg_upgrade.log"))

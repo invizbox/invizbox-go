@@ -3,8 +3,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=update
-PKG_VERSION:=1.2
-PKG_RELEASE:=1
+PKG_VERSION:=2.0
+PKG_RELEASE:=3
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/update
 
@@ -13,12 +13,16 @@ include $(INCLUDE_DIR)/package.mk
 define Package/update
 	SECTION:=invizbox
 	CATEGORY:=Invizbox
-	DEPENDS:=+unzip +invizboxutils +coreutils +coreutils-sha256sum +tor
+	DEPENDS:=+unzip +invizboxutils +tor
 	TITLE:=VPN Config Downloader
 endef
 
 define Package/update/description
 	Provides the functionality required to download up to date VPN configuration are regular interval
+endef
+
+define Package/update/conffiles
+	/etc/config/vpn
 endef
 
 define Build/Prepare

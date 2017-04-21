@@ -59,7 +59,7 @@ function netwatch.reset_iptables()
     -- http://inai.de/documents/Perfect_Ruleset.pdf)
     -- also consider scripting the changes as in the document for readability and manual testability)
     os.execute("sysctl -w net.ipv4.ip_forward=0")
-    os.execute("iptables -t nat -F")
+    os.execute("/bin/remove_forward_rules.ash")
 end
 
 function netwatch.set_status(option, status)
@@ -79,6 +79,24 @@ function netwatch.set_dnsmasq(connected)
         os.execute("ln -s -f /etc/dnsmasq.conf.captive /etc/dnsmasq.conf")
         utils.log("set dnsmasq to captive")
     end
+end
+
+function netwatch.set_dnsmasq_rebind_protection(on)
+    local config_name = "dhcp"
+    uci:load(config_name)
+    local name
+    uci:foreach(config_name, "dnsmasq", function(s)
+        name = s['.name']
+    end)
+    if on then
+        uci:set(config_name, name, "rebind_protection", "1")
+        utils.log("set dnsmasq rebind_protection to 1 (on)")
+    else
+        uci:set(config_name, name, "rebind_protection", "0")
+        utils.log("set dnsmasq rebind_protection to 0 (off)")
+    end
+    uci:save(config_name)
+    uci:commit(config_name)
 end
 
 function netwatch.set_dnsmasq_resolv(on)
@@ -164,13 +182,14 @@ function netwatch.no_network()
     -- DNS - order matters!!!
     netwatch.set_local_resolv(true)
     netwatch.set_dnsmasq(false)
+    netwatch.set_dnsmasq_rebind_protection(true)
     netwatch.set_dnsmasq_resolv(false)
     -- routing
     netwatch.reset_iptables()
     os.execute("sysctl -w net.ipv4.ip_forward=1")
-    os.execute("iptables -I FORWARD -i "..netwatch.access_point.." -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT")
-    os.execute("iptables -t nat -A PREROUTING -p tcp --dport 80 --jump DNAT --to-destination 10.153.146.1:80")
-    os.execute("iptables -t nat -A PREROUTING -p tcp --dport 443 --jump DNAT --to-destination 10.153.146.1:80")
+    os.execute('iptables -t nat -I PREROUTING -p tcp --dport 80 --jump DNAT --to-destination 10.153.146.1:80 -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I PREROUTING -p tcp --dport 443 --jump DNAT --to-destination 10.153.146.1:80 -m comment --comment "invizbox"')
+    os.execute('iptables -I FORWARD -i '..netwatch.access_point..' -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
     -- waiting
     while netwatch.running do
         utils.sleep(100)
@@ -187,27 +206,16 @@ function netwatch.captive_portal()
     utils.log("going orange solid")
     -- DNS - order matters!!!
     netwatch.set_dnsmasq(true)
+    netwatch.set_dnsmasq_rebind_protection(false)
     netwatch.set_dnsmasq_resolv(false)
     netwatch.set_local_resolv(false)
     -- routing
-    local handle = io.popen("route -n | grep 'UG[ \t]' | awk '{print $2}'")
-    local gateway_ip = handle:read("*l")
-    handle:close()
-    if gateway_ip then
-        utils.log("adding a route to all ports on gateway identified as ["..gateway_ip.."]")
-    end
     netwatch.reset_iptables()
     os.execute("sysctl -w net.ipv4.ip_forward=1")
-    os.execute("iptables -t nat -A POSTROUTING --out-interface "..netwatch.station.." -j MASQUERADE")
-    os.execute("iptables -I FORWARD -i "..netwatch.access_point.." -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT")
-    os.execute("iptables -A FORWARD -i "..netwatch.access_point.." -o "..netwatch.station.." -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT")
-    os.execute("iptables -A FORWARD -i "..netwatch.access_point.." -o "..netwatch.station.." -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT")
-    if gateway_ip then
-        os.execute("iptables -A FORWARD -i "..netwatch.access_point.." -o "..netwatch.station.." -p tcp --destination "..gateway_ip.." -m conntrack --ctstate NEW -j ACCEPT")
-        os.execute("iptables -A FORWARD -i "..netwatch.access_point.." -o "..netwatch.station.." -p udp --destination "..gateway_ip.." -m conntrack --ctstate NEW -j ACCEPT")
-    end
-    os.execute("iptables -A FORWARD -i "..netwatch.access_point.." -o "..netwatch.station.." -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
-    os.execute("iptables -A FORWARD -i "..netwatch.station.." -o "..netwatch.access_point.." -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
+    os.execute('iptables -t nat -I POSTROUTING --out-interface '..netwatch.station..' -j MASQUERADE -m comment --comment "invizbox"')
+    os.execute('iptables -I FORWARD -i '..netwatch.access_point..' -o '..netwatch.station..' -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT -m comment --comment "invizbox"')
+    os.execute('iptables -I FORWARD -i '..netwatch.station..' -o '..netwatch.access_point..' -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT -m comment --comment "invizbox"')
+    os.execute('iptables -I FORWARD -i '..netwatch.access_point..' -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
     -- waiting
     while netwatch.running do
         local result = netwatch.check_captive_portal()
@@ -238,15 +246,16 @@ function netwatch.network_no_vpn_or_tor(vpn)
     -- DNS - order matters!!!
     netwatch.set_local_resolv(true)
     netwatch.set_dnsmasq(false)
+    netwatch.set_dnsmasq_rebind_protection(true)
     netwatch.set_dnsmasq_resolv(false)
     -- set time
     netwatch.set_time()
     -- routing
     netwatch.reset_iptables()
     os.execute("sysctl -w net.ipv4.ip_forward=1")
-    os.execute("iptables -I FORWARD -i "..netwatch.access_point.." -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT")
-    os.execute("iptables -t nat -A PREROUTING -p tcp --dport 80 --jump DNAT --to-destination 10.153.146.1:80")
-    os.execute("iptables -t nat -A PREROUTING -p tcp --dport 443 --jump DNAT --to-destination 10.153.146.1:80")
+    os.execute('iptables -I FORWARD -i '..netwatch.access_point..' -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I PREROUTING -p tcp --dport 80 --jump DNAT --to-destination 10.153.146.1:80 -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I PREROUTING -p tcp --dport 443 --jump DNAT --to-destination 10.153.146.1:80 -m comment --comment "invizbox"')
     -- waiting
     while netwatch.running do
         if not vpn and netwatch.tor_is_up() then
@@ -271,6 +280,7 @@ function netwatch.use_tor()
     utils.log("going green solid")
     -- DNS - order matters!!!
     netwatch.set_dnsmasq(true)
+    netwatch.set_dnsmasq_rebind_protection(true)
     netwatch.set_dnsmasq_resolv(false)
     netwatch.set_local_resolv(false)
     -- set time
@@ -278,11 +288,11 @@ function netwatch.use_tor()
     -- routing
     netwatch.reset_iptables()
     os.execute("sysctl -w net.ipv4.ip_forward=1")
-    os.execute("iptables -t nat -A PREROUTING -p udp -m multiport --dport 3478,19302 -j REDIRECT --to-ports 9999")
-    os.execute("iptables -t nat -A PREROUTING -p udp -m multiport --sport 3478,19302 -j REDIRECT --to-ports 9999")
-    os.execute("iptables -t nat -A PREROUTING -s 10.153.146.1/24 -p udp --dport 53 -j DNAT --to-destination 172.16.1.1:9053")
-    os.execute("iptables -t nat -A PREROUTING -s 10.153.146.0/24 \\! -d 10.153.146.1 -p tcp --syn -j DNAT --to-destination 172.16.1.1:9040")
-    os.execute("iptables -t nat -A OUTPUT -d 10.192.0.0/16 -p tcp --syn -j DNAT --to-destination 172.16.1.1:9040")
+    os.execute('iptables -t nat -I PREROUTING -p udp -m multiport --dport 3478,19302 -j REDIRECT --to-ports 9999 -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I PREROUTING -p udp -m multiport --sport 3478,19302 -j REDIRECT --to-ports 9999 -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I PREROUTING -s 10.153.146.1/24 -p udp --dport 53 -j DNAT --to-destination 172.16.1.1:9053 -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I PREROUTING -s 10.153.146.0/24 \\! -d 10.153.146.1 -p tcp --syn -j DNAT --to-destination 172.16.1.1:9040 -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I OUTPUT -d 10.192.0.0/16 -p tcp --syn -j DNAT --to-destination 172.16.1.1:9040 -m comment --comment "invizbox"')
     -- waiting
     while netwatch.running do
         if netwatch.check_captive_portal() then
@@ -303,6 +313,7 @@ function netwatch.use_extend()
     utils.log("going orange solid - Wifi extender")
     -- DNS - order matters!!!
     netwatch.set_dnsmasq(true)
+    netwatch.set_dnsmasq_rebind_protection(false)
     netwatch.set_dnsmasq_resolv(false)
     netwatch.set_local_resolv(false)
     -- set time
@@ -310,17 +321,13 @@ function netwatch.use_extend()
     -- routing
     netwatch.reset_iptables()
     os.execute("sysctl -w net.ipv4.ip_forward=1")
-    os.execute("iptables -t nat -A OUTPUT -d 10.192.0.0/16 -p tcp --syn -j DNAT --to-destination 172.16.1.1:9040")
-    os.execute("iptables -I FORWARD -i "..netwatch.access_point.." -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT")
-    os.execute("iptables -t nat -A POSTROUTING --out-interface "..netwatch.station.." -j MASQUERADE")
-    os.execute("iptables -I FORWARD -i "..netwatch.access_point.." -o "..netwatch.station.." -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT")
-    os.execute("iptables -I FORWARD -i "..netwatch.station.." -o "..netwatch.access_point.." -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT")
+    os.execute('iptables -t nat -I POSTROUTING --out-interface '..netwatch.station..' -j MASQUERADE -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I OUTPUT -d 10.192.0.0/16 -p tcp --syn -j DNAT --to-destination 172.16.1.1:9040 -m comment --comment "invizbox"')
+    os.execute('iptables -I FORWARD -i '..netwatch.access_point..' -o '..netwatch.station..' -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
+    os.execute('iptables -I FORWARD -i '..netwatch.station..' -o '..netwatch.access_point..' -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
+    os.execute('iptables -I FORWARD -i '..netwatch.access_point..' -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
     -- waiting
     while netwatch.running do
-        if netwatch.check_captive_portal() then
-            utils.log("we're back behind a captive portal, restarting to deal with it")
-            break
-        end
         netwatch.running = netwatch.keep_running()
         utils.sleep(20)
     end
@@ -335,6 +342,7 @@ function netwatch.use_vpn()
     utils.log("going green solid")
     -- DNS - order matters!!!
     netwatch.set_dnsmasq(true)
+    netwatch.set_dnsmasq_rebind_protection(true)
     netwatch.set_dnsmasq_resolv(true)
     netwatch.set_local_resolv(false)
     -- set time
@@ -342,11 +350,11 @@ function netwatch.use_vpn()
     -- routing
     netwatch.reset_iptables()
     os.execute("sysctl -w net.ipv4.ip_forward=1")
-    os.execute("iptables -t nat -A OUTPUT -d 10.192.0.0/16 -p tcp --syn -j DNAT --to-destination 172.16.1.1:9040")
-    os.execute("iptables -I FORWARD -i "..netwatch.access_point.." -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT")
-    os.execute("iptables -t nat -A POSTROUTING --out-interface "..netwatch.vpn.." -j MASQUERADE")
-    os.execute("iptables -I FORWARD -i "..netwatch.access_point.." -o "..netwatch.vpn.." -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT")
-    os.execute("iptables -I FORWARD -i "..netwatch.vpn.." -o "..netwatch.access_point.." -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT")
+    os.execute('iptables -t nat -I OUTPUT -d 10.192.0.0/16 -p tcp --syn -j DNAT --to-destination 172.16.1.1:9040 -m comment --comment "invizbox"')
+    os.execute("iptables -t nat -I POSTROUTING --out-interface "..netwatch.vpn.." -j MASQUERADE")
+    os.execute('iptables -I FORWARD -i '..netwatch.access_point..' -o '..netwatch.vpn..' -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
+    os.execute('iptables -I FORWARD -i '..netwatch.vpn..' -o '..netwatch.access_point..' -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
+    os.execute('iptables -I FORWARD -i '..netwatch.access_point..' -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
     -- waiting
     while netwatch.running do
         if netwatch.check_captive_portal() then
@@ -367,13 +375,14 @@ function netwatch.cant_determine_portal()
     -- DNS - order matters!!!
     netwatch.set_local_resolv(true)
     netwatch.set_dnsmasq(false)
+    netwatch.set_dnsmasq_rebind_protection(true)
     netwatch.set_dnsmasq_resolv(false)
     -- routing
     netwatch.reset_iptables()
     os.execute("sysctl -w net.ipv4.ip_forward=1")
-    os.execute("iptables -I FORWARD -i "..netwatch.access_point.." -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT")
-    os.execute("iptables -t nat -A PREROUTING -p tcp --dport 80 --jump DNAT --to-destination 10.153.146.1:80")
-    os.execute("iptables -t nat -A PREROUTING -p tcp --dport 443 --jump DNAT --to-destination 10.153.146.1:80")
+    os.execute('iptables -I FORWARD -i '..netwatch.access_point..' -o br-lan -d inviz.box -m conntrack --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I PREROUTING -p tcp --dport 80 --jump DNAT --to-destination 10.153.146.1:80 -m comment --comment "invizbox"')
+    os.execute('iptables -t nat -I PREROUTING -p tcp --dport 443 --jump DNAT --to-destination 10.153.146.1:80 -m comment --comment "invizbox"')
     -- waiting
     while netwatch.running do
         local result = netwatch.check_captive_portal()

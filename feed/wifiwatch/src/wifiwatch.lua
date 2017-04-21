@@ -100,7 +100,7 @@ function wifiwatch.deal_with_station()
                     utils.log("connected to "..ssid)
                     connected = true
                     wifiwatch.failed_networks = {}
-                    os.execute("/etc/init.d/openvpn restart")
+                    os.execute("/etc/init.d/vpnwatch restart")
                     break
                 else
                     utils.log("unable to connect to "..ssid..", forgetting this SSID until next successful connection")

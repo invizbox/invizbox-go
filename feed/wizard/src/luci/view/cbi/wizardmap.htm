@@ -142,6 +142,7 @@
 		$("select option:selected").each(function () {
 			if(this.innerHTML.indexOf('Open') > 0 ) {
 				document.getElementById('cbi-wireless-wan-key').style.display='none';
+				document.getElementById("ssidpassword").value = "";
 			} else {
 				document.getElementById('cbi-wireless-wan-key').style.display='block';
 			}

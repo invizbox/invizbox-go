@@ -1,21 +1,21 @@
 config version version
-	option firmware 1.2.1
+	option firmware 2.0.3
 
 config url onion
 	option vpn_configuration http://invizboxinobxs4f.onion/vpn/latest/vpn_configuration.zip
 	option vpn_configuration_sha http://invizboxinobxs4f.onion/vpn/latest/vpn_configuration.sha
 	option vpn_configuration_content_sha http://invizboxinobxs4f.onion/vpn/latest/vpn_configuration.content.sha
-	option new_firmware_version http://invizboxinobxs4f.onion/go/latest/firmware_version.txt
-	option new_firmware http://invizboxinobxs4f.onion/go/latest/InvizBox-Go-%s-sysupgrade.bin
-	option new_firmware_sha http://invizboxinobxs4f.onion/go/latest/InvizBox-Go-%s-sysupgrade.sha
+	option new_firmware_version http://invizboxinobxs4f.onion/go_2.x/latest/firmware_version.txt
+	option new_firmware http://invizboxinobxs4f.onion/go_2.x/latest/InvizBox-Go-%s-sysupgrade.bin
+	option new_firmware_sha http://invizboxinobxs4f.onion/go_2.x/latest/InvizBox-Go-%s-sysupgrade.sha
 
 config url clearnet
 	option vpn_configuration http://52.211.165.140/vpn/latest/vpn_configuration.zip
 	option vpn_configuration_sha http://52.211.165.140/vpn/latest/vpn_configuration.sha
 	option vpn_configuration_content_sha http://52.211.165.140/vpn/latest/vpn_configuration.content.sha
-	option new_firmware_version http://52.211.165.140/go/latest/firmware_version.txt
-	option new_firmware http://52.211.165.140/go/latest/InvizBox-Go-%s-sysupgrade.bin
-	option new_firmware_sha http://52.211.165.140/go/latest/InvizBox-Go-%s-sysupgrade.sha
+	option new_firmware_version http://52.211.165.140/go_2.x/latest/firmware_version.txt
+	option new_firmware http://52.211.165.140/go_2.x/latest/InvizBox-Go-%s-sysupgrade.bin
+	option new_firmware_sha http://52.211.165.140/go_2.x/latest/InvizBox-Go-%s-sysupgrade.sha
 
 config active active
 	option current_content_sha 123456

@@ -17,6 +17,10 @@ define Package/wizard
 	TITLE:=Configuration Wizard
 endef
 
+define Package/wizard/conffiles
+	/etc/config/wizard
+endef
+
 define Package/wizard/description
 	The initial launch and configuration wizard for a new InvizBox Go	
 endef

@@ -98,7 +98,12 @@ function invizboxutils.table_size(table)
 end
 
 function invizboxutils.uci_characters(identifier)
-    return string.gsub(identifier, '[^a-zA-Z0-9_]', '')
+    local uci_value = string.gsub(identifier, '[^a-zA-Z0-9_]', '')
+    if uci_value == "" then
+        local md5_output = invizboxutils.run_and_log("echo '"..identifier.."' | md5sum")
+        uci_value = string.gmatch(md5_output, "%S+")()
+    end
+    return uci_value
 end
 
 function invizboxutils.wifi_networks()
