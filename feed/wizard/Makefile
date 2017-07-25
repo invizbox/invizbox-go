@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wizard
 PKG_VERSION:=0.0
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/wizard
 
@@ -13,7 +13,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/wizard
 	SECTION:=invizbox
 	CATEGORY:=Invizbox
-	DEPENDS:=+luci-theme-material +torcheck
+	DEPENDS:=+luci-theme-material +torcheck +luci-app-adblock +ca-bundle +ca-certificates +libustream-openssl
 	TITLE:=Configuration Wizard
 endef
 

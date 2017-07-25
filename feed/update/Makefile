@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=update
 PKG_VERSION:=2.0
-PKG_RELEASE:=3
+PKG_RELEASE:=7
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/update
 

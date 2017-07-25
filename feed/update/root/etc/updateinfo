@@ -1,5 +1,5 @@
 config version version
-	option firmware 2.0.3
+	option firmware 2.0.7
 
 config url onion
 	option vpn_configuration http://invizboxinobxs4f.onion/vpn/latest/vpn_configuration.zip
