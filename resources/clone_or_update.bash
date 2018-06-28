@@ -5,7 +5,7 @@ set -u
 
 folder=$1
 # explicit SHA below to force a rebuild from BUCK and fail cache lookup
-commit_SHA="0df3ad98aa375e876d2f2bf89d240f7c0ddf491e"
+commit_SHA="ab57d95a176f2a868310c0802fc49558d2179cd3"
 repository="https://github.com/invizbox/lede.git"
 
 if [ -d ${folder} ]; then

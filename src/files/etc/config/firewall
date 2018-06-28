@@ -1,0 +1,18 @@
+config defaults
+        option syn_flood        1
+        option input            REJECT
+        option output           ACCEPT
+        option forward          REJECT
+# Uncomment this line to disable ipv6 rules
+        option disable_ipv6     1
+
+config zone
+        option name             mtufix
+        option network          wan
+        option mtu_fix          1
+
+config zone
+        option name             inputaccept
+        list network            ap
+        list network            loopback
+        option input            ACCEPT
