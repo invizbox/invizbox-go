@@ -1,21 +1,21 @@
 #!/bin/bash
 
-echo "Preparing the lede directory..."
+set -e
 
-resources/clone_or_update.bash lede
+version=$(grep CONFIG_VERSION_NUMBER src/.config | cut -d '"' -f 2)
 
-rsync -avh  src/files/ lede/files/ --delete
-
-cp src/feeds.conf lede/feeds.conf
-
-cd lede
+echo "Preparing the openwrt directory..."
+resources/clone_or_update.bash openwrt
+rsync -avh  src/files/ openwrt/files/ --delete
+cp src/feeds.conf openwrt/
+cp src/.config openwrt/
+cd openwrt
 ./scripts/feeds update -a
 ./scripts/feeds install -a
-
-sed "s,@HOME_DIR@,"$HOME"," ../src/.config > .config
-
 make defconfig
 
-echo "lede directory ready!"
-
-nice -n 19 make -j $(($(grep -c processor /proc/cpuinfo)))
+echo "Building the firmware"
+sed -e "s,@VPN_PROVIDER@,invizbox," -e "s,@GO_VERSION@,${version}," ../src/files/etc/config/update > files/etc/config/update
+sed "s,@GO_VERSION@,${version}," ../src/files/etc/banner > files/etc/banner
+make -j $(($(grep -c processor /proc/cpuinfo)))
+echo "All Done!"

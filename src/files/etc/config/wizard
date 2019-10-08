@@ -1,0 +1,7 @@
+config wizard 'main'
+	option complete 'false'
+	option product_name 'InvizBox Go'
+	option flashing 'false'
+
+config pages 'pages'
+	option show_vpn_subscription 'false'

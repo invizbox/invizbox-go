@@ -1,0 +1,20 @@
+config version 'version'
+	option firmware '@GO_VERSION@'
+
+config source 'server'
+	option clear 'https://update.invizbox.com'
+	option onion 'http://invizboxinobxs4f.onion'
+
+config urls 'urls'
+	option firmware_upgrade_support 'https://support.invizbox.com/hc/en-us/articles/115000582165'
+	option new_firmware_path '/invizbox_go_firmware/latest/InvizBox-Go-@VPN_PROVIDER@-'
+	option vpn_configuration '/invizbox_go_vpn/latest/@VPN_PROVIDER@_vpn_configuration'
+	option nearest_cities '/nearest/@VPN_PROVIDER@'
+	option vpn_status '/@VPN_PROVIDER@_vpn_status'
+
+config active 'active'
+	option current_vpn_sha '123456'
+	option firmware 'true'
+	option opkg 'true'
+	option version_only 'false'
+	option vpn 'true'

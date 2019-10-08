@@ -1,6 +1,0 @@
-# If you're using InvizBox VPN, you can remove this file as it is present in the InvizBox feed.
-# If you are using a VPN provider which runs its own DNS servers, put them here instead of the Google ones.
-
-search lan
-nameserver 8.8.8.8
-nameserver 8.8.4.4
