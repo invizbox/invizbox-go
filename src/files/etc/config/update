@@ -7,9 +7,9 @@ config source 'server'
 
 config urls 'urls'
 	option firmware_upgrade_support 'https://support.invizbox.com/hc/en-us/articles/115000582165'
-	option new_firmware_path '/invizbox_go_firmware/latest/InvizBox-Go-@VPN_PROVIDER@-'
-	option vpn_configuration '/invizbox_go_vpn/latest/@VPN_PROVIDER@_vpn_configuration'
 	option nearest_cities '/nearest/@VPN_PROVIDER@'
+	option new_firmware_path '/invizbox_go_firmware/latest/InvizBox-Go-@VPN_PROVIDER@-'
+	option vpn_configuration '/vpn/latest/@VPN_PROVIDER@_vpn_configuration'
 	option vpn_status '/@VPN_PROVIDER@_vpn_status'
 
 config active 'active'
